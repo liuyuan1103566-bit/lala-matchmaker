@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Taim. 拉拉红娘</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --purple:#7B6CF6;--blue:#5B9BD5;--pink:#FF8FAB;
+  --gold:#F4A835;--gold2:#F9C55A;
+  --dark:#2D2A5E;--mid:#4A4780;--soft:#7B78A8;--pale:#B0ADDA;
+  --bg:#EEF0FF;--card:rgba(255,255,255,0.85);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:var(--bg);color:var(--dark);overscroll-behavior:none}
+
+/* BG */
+.bg{position:fixed;inset:0;z-index:-2;background:linear-gradient(160deg,#e8e8ff 0%,#d4c5f5 40%,#c5d8f5 70%,#dce8ff 100%)}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);z-index:-1;pointer-events:none}
+.orb1{width:400px;height:400px;background:rgba(160,120,255,0.15);top:-100px;right:-80px}
+.orb2{width:350px;height:350px;background:rgba(100,160,255,0.12);bottom:-80px;left:-80px}
+.orb3{width:200px;height:200px;background:rgba(244,168,53,0.1);top:50%;left:50%;transform:translate(-50%,-50%)}
+
+/* CARD STACK — the main layout */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;transition:opacity .3s,transform .35s cubic-bezier(.4,0,.2,1)}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(40px)}
+.screen.slide-out{opacity:0;transform:translateY(-40px)}
+
+/* NAV */
+.nav{padding:14px 20px;display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,0.7);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(123,108,246,0.1);flex-shrink:0}
+.nav-logo{font-size:19px;font-weight:900;background:linear-gradient(90deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.nav-right{margin-left:auto;display:flex;gap:8px}
+.nav-btn{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid rgba(123,108,246,0.25);background:rgba(255,255,255,0.7);color:var(--purple)}
+
+/* GOLDEN RETRIEVER SVG */
+.dog-wrap{display:flex;justify-content:center;margin:0 auto 4px}
+
+/* LANDING */
+.landing-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 28px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;background:rgba(244,168,53,0.12);border:1px solid rgba(244,168,53,0.3);font-size:12px;font-weight:600;color:#C4820A;margin-bottom:20px}
+.landing-title{font-size:clamp(30px,7vw,52px);font-weight:900;line-height:1.2;text-align:center;margin-bottom:12px;background:linear-gradient(135deg,#3D2A8A,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.landing-sub{font-size:15px;color:var(--soft);line-height:1.8;text-align:center;max-width:340px;margin-bottom:32px}
+.cta-wrap{display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:15px 24px;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;border:none;transition:all .2s;width:100%}
+.btn-primary{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;box-shadow:0 8px 24px rgba(123,108,246,0.3)}
+.btn-primary:active{transform:scale(0.97)}
+.btn-outline{background:rgba(255,255,255,0.8);color:var(--purple);border:1.5px solid rgba(123,108,246,0.25)}
+.btn-outline:active{background:rgba(123,108,246,0.08)}
+.stats{display:flex;gap:28px;margin-top:28px;justify-content:center}
+.stat-num{font-size:24px;font-weight:900;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-lbl{font-size:11px;color:var(--pale);margin-top:2px}
+
+/* QUIZ SCREEN */
+.quiz-body{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.progress-bar-wrap{padding:12px 20px 8px;flex-shrink:0}
+.prog-track{height:5px;background:rgba(123,108,246,0.12);border-radius:3px}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--blue));transition:width .4s}
+.prog-label{font-size:12px;color:var(--pale);text-align:right;margin-top:5px}
+
+/* CARD SWIPE AREA */
+.cards-area{flex:1;position:relative;overflow:hidden;padding:10px 20px 0}
+.q-card{
+  position:absolute;inset:0;margin:0 auto;max-width:440px;width:100%;
+  background:var(--card);backdrop-filter:blur(20px);border-radius:24px;
+  border:1px solid rgba(255,255,255,0.9);
+  box-shadow:0 12px 40px rgba(123,108,246,0.12),inset 0 1px 0 rgba(255,255,255,0.9);
+  padding:28px 22px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  transition:transform .35s cubic-bezier(.4,0,.2,1),opacity .3s;
+  display:flex;flex-direction:column;
+}
+.q-card.next{transform:translateX(100%);opacity:0}
+.q-card.prev{transform:translateX(-100%);opacity:0}
+.q-card.active{transform:translateX(0);opacity:1}
+
+.step-tag{font-size:11px;font-weight:700;color:var(--purple);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.section-title{font-size:17px;font-weight:800;color:var(--dark);margin-bottom:2px}
+.section-sub{font-size:13px;color:var(--soft);margin-bottom:18px}
+
+.q-label{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:10px;line-height:1.6}
+.q-note{font-size:12px;color:var(--pale);margin-bottom:8px}
+
+/* OPTIONS */
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:center;gap:10px;padding:12px 15px;border-radius:13px;border:1.5px solid rgba(123,108,246,0.15);cursor:pointer;font-size:14px;color:var(--mid);background:rgba(255,255,255,0.5);transition:all .15s;text-align:left}
+.opt:active{transform:scale(0.98)}
+.opt.sel{border-color:var(--purple);background:rgba(123,108,246,0.1);color:var(--dark);font-weight:600}
+.opt input{display:none}
+.opt-dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(123,108,246,0.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.opt.sel .opt-dot{background:var(--purple);border-color:var(--purple)}
+.opt.sel .opt-dot::after{content:'';width:7px;height:7px;border-radius:50%;background:#fff}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:7px 14px;border-radius:20px;border:1.5px solid rgba(123,108,246,0.18);font-size:13px;cursor:pointer;color:var(--soft);background:rgba(255,255,255,0.6);transition:all .15s}
+.tag.sel{border-color:var(--purple);background:rgba(123,108,246,0.12);color:var(--purple);font-weight:600}
+
+/* INPUTS */
+input[type=text],input[type=number],textarea{
+  width:100%;border:1.5px solid rgba(123,108,246,0.18);border-radius:12px;
+  padding:11px 14px;font-size:14px;outline:none;font-family:inherit;
+  background:rgba(255,255,255,0.7);color:var(--dark)
+}
+input:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(123,108,246,0.1)}
+textarea{resize:none;min-height:70px}
+.input-row{display:flex;gap:8px}
+.input-row input{flex:1}
+
+/* BOTTOM NAV */
+.bottom-nav{padding:12px 20px 20px;display:flex;gap:10px;flex-shrink:0;background:rgba(255,255,255,0.5);backdrop-filter:blur(10px)}
+.bottom-nav .btn{flex:1;padding:13px}
+.btn-back{flex:0 0 50px!important;background:rgba(255,255,255,0.8);border:1.5px solid rgba(123,108,246,0.2);color:var(--purple);border-radius:16px;font-size:18px}
+
+/* REPORT SCREEN */
+.report-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 100px}
+.r-max{max-width:440px;margin:0 auto}
+
+/* hero card */
+.hero-card{
+  background:linear-gradient(135deg,rgba(123,108,246,0.12),rgba(91,155,213,0.1));
+  border:1.5px solid rgba(123,108,246,0.2);border-radius:24px;
+  padding:28px 20px;text-align:center;margin-bottom:12px;
+  box-shadow:0 8px 32px rgba(123,108,246,0.1);
+}
+.hero-animal{font-size:52px;margin-bottom:6px}
+.hero-name{font-size:20px;font-weight:800;color:var(--dark);margin-bottom:4px}
+.hero-sub{font-size:13px;color:var(--soft)}
+.hero-animal-desc{font-size:13px;color:var(--mid);line-height:1.7;margin-top:12px;padding:10px 14px;background:rgba(123,108,246,0.06);border-radius:12px;text-align:left}
+
+/* section cards */
+.r-card{background:rgba(255,255,255,0.8);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.9);border-radius:20px;box-shadow:0 6px 24px rgba(123,108,246,0.09);padding:18px;margin-bottom:10px}
+.r-title{font-size:14px;font-weight:800;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.r-icon{font-size:17px}
+.r-body{font-size:14px;color:var(--mid);line-height:1.8}
+
+/* items */
+.items{display:flex;flex-direction:column;gap:7px}
+.item{padding:11px 14px;border-radius:12px;font-size:13px;line-height:1.7;color:var(--dark)}
+.item strong{color:var(--dark)}
+.item-p{background:rgba(123,108,246,0.07);border-left:3px solid var(--purple)}
+.item-b{background:rgba(91,155,213,0.08);border-left:3px solid var(--blue)}
+.item-y{background:rgba(244,168,53,0.08);border-left:3px solid var(--gold)}
+.item-pk{background:rgba(255,143,171,0.08);border-left:3px solid var(--pink)}
+.item-r{background:rgba(220,53,69,0.06);border-left:3px solid #DC3545}
+
+/* places */
+.places{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.place{padding:5px 12px;border-radius:10px;font-size:12px;background:rgba(91,155,213,0.1);border:1px solid rgba(91,155,213,0.22);color:#3A7CB8;font-weight:500}
+
+/* type badge */
+.type-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:20px;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font-size:13px;font-weight:700;margin-bottom:10px}
+
+/* DANGER */
+.danger-box{padding:14px;background:rgba(220,53,69,0.05);border:1.5px solid rgba(220,53,69,0.15);border-radius:14px;margin-bottom:10px}
+.danger-name{font-size:15px;font-weight:800;color:#C0392B;margin-bottom:6px}
+.danger-why{font-size:13px;color:var(--mid);line-height:1.7}
+.signal-label{font-size:12px;font-weight:700;color:var(--dark);margin:10px 0 6px}
+
+/* SCORE RING */
+.score-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:14px}
+.score-ring{position:relative;width:100px;height:100px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stars{font-size:18px;margin-bottom:6px}
+.rec-tag{display:inline-block;padding:5px 18px;border-radius:20px;font-size:13px;font-weight:700}
+.rec-strong{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
+.rec-ok{background:linear-gradient(135deg,#34C78A,#06b6d4);color:#fff}
+.rec-caution{background:linear-gradient(135deg,#FFA756,#f59e0b);color:#fff}
+.rec-no{background:rgba(123,108,246,0.15);color:var(--purple)}
+
+/* CHAT */
+.chat{display:flex;flex-direction:column;gap:8px}
+.chat-row-a{display:flex;flex-direction:column;align-items:flex-end}
+.chat-row-b{display:flex;flex-direction:column;align-items:flex-start}
+.chat-who{font-size:11px;color:var(--pale);margin-bottom:2px}
+.chat-msg{max-width:80%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.6}
+.chat-a{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;border-bottom-right-radius:4px}
+.chat-b{background:rgba(255,255,255,0.85);color:var(--mid);border-bottom-left-radius:4px;border:1px solid rgba(123,108,246,0.1)}
+
+/* DIM GRID */
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dim-card{background:rgba(255,255,255,0.6);border-radius:12px;padding:12px;border:1px solid rgba(123,108,246,0.1)}
+.dim-name{font-size:10px;color:var(--pale);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px}
+.dim-val{font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.dim-bar{height:3px;background:rgba(123,108,246,0.1);border-radius:2px;margin:6px 0}
+.dim-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple),var(--blue))}
+.dim-note{font-size:11px;color:var(--soft);line-height:1.5}
+
+/* PORTRAIT */
+.p-block{margin-bottom:12px}
+.p-lbl{font-size:10px;font-weight:700;color:var(--purple);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.p-text{font-size:14px;color:var(--mid);line-height:1.8}
+
+/* ADMIN */
+.admin-body{flex:1;overflow-y:auto;padding:16px 16px 100px}
+.admin-max{max-width:440px;margin:0 auto}
+.admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.admin-ttl{font-size:20px;font-weight:800;color:var(--dark)}
+.pair-panel{background:rgba(255,255,255,0.8);border-radius:18px;padding:16px;text-align:center;margin-bottom:12px;border:1px solid rgba(123,108,246,0.12)}
+.pair-disp{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.pair-tag{padding:4px 14px;border-radius:12px;font-size:13px;font-weight:700}
+.pair-a{background:rgba(123,108,246,0.12);color:var(--purple);border:1px solid rgba(123,108,246,0.2)}
+.pair-b{background:rgba(91,155,213,0.12);color:var(--blue);border:1px solid rgba(91,155,213,0.2)}
+.u-card{display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:8px;background:rgba(255,255,255,0.8);border:1.5px solid rgba(123,108,246,0.1);border-radius:16px;cursor:pointer;transition:all .2s}
+.u-card.sel-a{border-color:var(--purple);background:rgba(123,108,246,0.08)}
+.u-card.sel-b{border-color:var(--blue);background:rgba(91,155,213,0.08)}
+.u-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;flex-shrink:0}
+.u-name{font-weight:700;font-size:14px;color:var(--dark)}
+.u-meta{font-size:12px;color:var(--pale);margin-top:2px}
+.bdg{display:inline-block;padding:2px 7px;border-radius:7px;font-size:10px;font-weight:700;margin-left:5px}
+.bdg-a{background:rgba(123,108,246,0.15);color:var(--purple)}
+.bdg-b{background:rgba(91,155,213,0.15);color:var(--blue)}
+
+/* FLOATING BAR */
+.float-bar{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;white-space:nowrap;
+  background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;
+  padding:13px 26px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;
+  box-shadow:0 8px 28px rgba(123,108,246,0.4);border:none}
+
+@media(min-width:480px){.q-card,.r-max,.admin-max{left:50%;right:auto;transform:translateX(-50%);width:100%;max-width:440px}}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- NAV (shared) -->
+<div id="global-nav" style="position:fixed;top:0;left:0;right:0;z-index:100">
+  <div class="nav">
+    <div class="dog-wrap">
+      <svg width="30" height="28" viewBox="0 0 30 28" fill="none">
+        <ellipse cx="15" cy="19" rx="11" ry="7.5" fill="#F4A835"/>
+        <ellipse cx="15" cy="19" rx="8.5" ry="5.5" fill="#F9C55A"/>
+        <ellipse cx="6.5" cy="14" rx="4.5" ry="6" fill="#E8921A" transform="rotate(-18 6.5 14)"/>
+        <ellipse cx="23.5" cy="14" rx="4.5" ry="6" fill="#E8921A" transform="rotate(18 23.5 14)"/>
+        <ellipse cx="15" cy="11.5" rx="7.5" ry="7" fill="#F9C55A"/>
+        <ellipse cx="11.5" cy="10.5" rx="2" ry="2.2" fill="#3D2A0A"/>
+        <ellipse cx="18.5" cy="10.5" rx="2" ry="2.2" fill="#3D2A0A"/>
+        <circle cx="12" cy="9.8" r="0.8" fill="white"/>
+        <circle cx="19" cy="9.8" r="0.8" fill="white"/>
+        <ellipse cx="15" cy="14" rx="2.2" ry="1.5" fill="#3D2A0A"/>
+        <ellipse cx="10" cy="13.5" rx="2.2" ry="1.3" fill="#FF8FAB" opacity="0.5"/>
+        <ellipse cx="20" cy="13.5" rx="2.2" ry="1.3" fill="#FF8FAB" opacity="0.5"/>
+        <ellipse cx="15" cy="16.5" rx="2.2" ry="1.8" fill="#FF8FAB"/>
+      </svg>
+    </div>
+    <div class="nav-logo">Taim.</div>
+    <div class="nav-right">
+      <button class="nav-btn" onclick="showReport()">我的报告</button>
+      <button class="nav-btn" onclick="showAdmin()">后台</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LANDING ===== -->
+<div class="screen" id="sc-landing" style="padding-top:60px">
+  <div class="landing-body">
+    <div class="badge">🐾 心理学驱动的拉拉红娘</div>
+    <!-- 金毛大图 -->
+    <div style="margin-bottom:16px">
+      <svg width="140" height="130" viewBox="0 0 140 130" fill="none">
+        <!-- 身体 -->
+        <ellipse cx="70" cy="90" rx="48" ry="35" fill="#F4A835"/>
+        <ellipse cx="70" cy="90" rx="38" ry="27" fill="#F9C55A"/>
+        <!-- 左耳 -->
+        <ellipse cx="28" cy="55" rx="18" ry="26" fill="#E8921A" transform="rotate(-15 28 55)"/>
+        <ellipse cx="28" cy="55" rx="12" ry="18" fill="#F4A835" transform="rotate(-15 28 55)"/>
+        <!-- 右耳 -->
+        <ellipse cx="112" cy="55" rx="18" ry="26" fill="#E8921A" transform="rotate(15 112 55)"/>
+        <ellipse cx="112" cy="55" rx="12" ry="18" fill="#F4A835" transform="rotate(15 112 55)"/>
+        <!-- 头 -->
+        <ellipse cx="70" cy="50" rx="36" ry="34" fill="#F9C55A"/>
+        <ellipse cx="70" cy="50" rx="32" ry="30" fill="#FBD678"/>
+        <!-- 眼睛 -->
+        <ellipse cx="53" cy="44" rx="8" ry="9" fill="white"/>
+        <ellipse cx="87" cy="44" rx="8" ry="9" fill="white"/>
+        <ellipse cx="55" cy="46" rx="5.5" ry="6.5" fill="#3D2A0A"/>
+        <ellipse cx="89" cy="46" rx="5.5" ry="6.5" fill="#3D2A0A"/>
+        <ellipse cx="56" cy="43" rx="2" ry="2.5" fill="white"/>
+        <ellipse cx="90" cy="43" rx="2" ry="2.5" fill="white"/>
+        <!-- 鼻子 -->
+        <ellipse cx="70" cy="62" rx="9" ry="6" fill="#3D2A0A"/>
+        <ellipse cx="67" cy="60" rx="3" ry="2" fill="#5D4433" opacity="0.4"/>
+        <!-- 嘴 -->
+        <path d="M62 70 Q70 78 78 70" stroke="#3D2A0A" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <!-- 舌头 -->
+        <ellipse cx="70" cy="74" rx="8" ry="7" fill="#FF8FAB"/>
+        <ellipse cx="70" cy="78" rx="4" ry="3" fill="#E8709A"/>
+        <!-- 腮红 -->
+        <ellipse cx="36" cy="60" rx="10" ry="6" fill="#FF8FAB" opacity="0.35"/>
+        <ellipse cx="104" cy="60" rx="10" ry="6" fill="#FF8FAB" opacity="0.35"/>
+        <!-- 前爪 -->
+        <ellipse cx="45" cy="115" rx="15" ry="10" fill="#F4A835"/>
+        <ellipse cx="95" cy="115" rx="15" ry="10" fill="#F4A835"/>
+        <!-- 爪垫 -->
+        <ellipse cx="45" cy="117" rx="8" ry="5" fill="#E8921A"/>
+        <ellipse cx="95" cy="117" rx="8" ry="5" fill="#E8921A"/>
+        <!-- 尾巴（右侧弯曲） -->
+        <path d="M118 85 C135 70 140 50 128 40" stroke="#F4A835" stroke-width="12" stroke-linecap="round" fill="none"/>
+        <path d="M118 85 C135 70 140 50 128 40" stroke="#F9C55A" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <!-- 颈毛 -->
+        <ellipse cx="70" cy="78" rx="22" ry="10" fill="#F4A835" opacity="0.6"/>
+      </svg>
+    </div>
+    <h1 class="landing-title">找到真正<br>懂你的她</h1>
+    <p class="landing-sub">不只是条件匹配，而是依恋类型、情感模式、当下能量状态的深度相容。</p>
+    <div class="cta-wrap">
+      <button class="btn btn-primary" onclick="startQuiz()">开始填写档案 →</button>
+      <button class="btn btn-outline" onclick="showReport()">查看我的报告</button>
+    </div>
+    <div class="stats">
+      <div style="text-align:center"><div class="stat-num">41题</div><div class="stat-lbl">完整心理档案</div></div>
+      <div style="text-align:center"><div class="stat-num">4维</div><div class="stat-lbl">立体匹配</div></div>
+      <div style="text-align:center"><div class="stat-num">7项</div><div class="stat-lbl">深度报告</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div class="screen hidden" id="sc-quiz" style="padding-top:60px">
+  <div class="quiz-body">
+    <div class="progress-bar-wrap">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:2%"></div></div>
+      <div class="prog-label" id="prog-label">第 1 步 / 共 5 步</div>
+    </div>
+    <div class="cards-area" id="cards-area">
+      <!-- cards injected by JS -->
+    </div>
+    <div class="bottom-nav">
+      <button class="btn btn-back" id="btn-back" onclick="prevCard()">←</button>
+      <button class="btn btn-primary" id="btn-next" onclick="nextCard()">继续 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SELF REPORT ===== -->
+<div class="screen hidden" id="sc-report" style="padding-top:60px">
+  <div class="report-body">
+    <div class="r-max">
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn btn-outline" style="width:auto;padding:9px 16px;font-size:13px" onclick="showLanding()">← 首页</button>
+        <button class="btn btn-outline" style="width:auto;padding:9px 16px;font-size:13px" onclick="startQuiz()">重新填写</button>
+      </div>
+      <div id="report-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADMIN ===== -->
+<div class="screen hidden" id="sc-admin" style="padding-top:60px">
+  <div class="admin-body">
+    <div class="admin-max">
+      <div class="admin-head">
+        <div class="admin-ttl">🐾 红娘后台</div>
+        <button class="nav-btn" onclick="loadAdmin()">刷新</button>
+      </div>
+      <div class="pair-panel">
+        <div style="font-size:13px;color:var(--soft);margin-bottom:10px">选两位用户生成匹配报告</div>
+        <div class="pair-disp" id="pair-disp"><span style="color:var(--pale)">还未选择</span></div>
+        <button class="btn btn-primary" id="btn-match" onclick="genMatch()" disabled style="width:auto;padding:11px 22px">生成匹配报告 ✨</button>
+      </div>
+      <div id="admin-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MATCH REPORT ===== -->
+<div class="screen hidden" id="sc-match" style="padding-top:60px">
+  <div class="report-body">
+    <div class="r-max">
+      <button class="btn btn-outline" style="width:auto;padding:9px 16px;font-size:13px;margin-bottom:14px" onclick="showAdmin()">← 返回后台</button>
+      <div id="match-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+var DB_KEY='taim_v1';
+var lastUser=null, selA=null, selB=null;
+var cardIdx=0;
+var LIMITS={q16:3,q18:5};
+var formData={};
+
+function getDB(){ try{return JSON.parse(localStorage.getItem(DB_KEY)||'[]')}catch(e){return[]} }
+function saveDB(a){ localStorage.setItem(DB_KEY,JSON.stringify(a)) }
+
+// ===== SCREENS =====
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.add('hidden');
+    s.classList.remove('slide-out');
+  });
+  var el=document.getElementById(id);
+  el.classList.remove('hidden');
+  window.scrollTo(0,0);
+}
+function showLanding(){ showScreen('sc-landing') }
+function showAdmin(){ showScreen('sc-admin'); loadAdmin() }
+function showReport(){
+  if(!lastUser){ var u=getDB(); if(u.length) lastUser=u[u.length-1] }
+  if(!lastUser){ startQuiz(); return }
+  renderReport(lastUser);
+  showScreen('sc-report');
+}
+
+// ===== QUIZ ENGINE =====
+var STEPS=[
+  {id:'s1',num:'STEP 01',title:'关于你',sub:'先让我们认识你',questions:[
+    {id:'q1',type:'text',label:'你的昵称',ph:'随便起一个就好'},
+    {id:'q2',type:'number',label:'你的年龄',ph:'例如：26'},
+    {id:'q3',type:'text',label:'常驻城市',ph:'例如：北京'},
+    {id:'q4',type:'radio',label:'你的性别属性',opts:['T','P','H（不偏向）','其他']},
+    {id:'q5',type:'radio',label:'情趣属性',opts:['喜欢主导，掌控节奏','喜欢被主导，跟着走','都可以，视对方而定','其他']},
+    {id:'q6',type:'radio',label:'学历',opts:['大专及以下','本科','硕士','博士及以上']},
+    {id:'q7',type:'radio',label:'职业状态',opts:['企业在职','自由职业','创业中','学生','其他']},
+    {id:'q8',type:'radio',label:'月收入范围',opts:['5000以下','5000–10000','10000–20000','20000–50000','50000以上']},
+    {id:'q9',type:'radio',label:'工作强度',opts:['低强度：生活充裕','中强度：偶尔加班','高强度：私人时间少','随机：节奏不固定']},
+  ]},
+  {id:'s2',num:'STEP 02',title:'你期待的TA',sub:'你对伴侣的基本期待',questions:[
+    {id:'q10',type:'range',label:'期待对方的年龄范围',ph1:'最小岁数',ph2:'最大岁数'},
+    {id:'q11',type:'radio',label:'对城市/距离的态度',opts:['必须同城','接受异地但需有在一起的计划','异地也OK','无要求']},
+    {id:'q12',type:'radio',label:'期待对方的性别属性',opts:['T','P','H','不限']},
+    {id:'q13',type:'radio',label:'对对方学历的要求',opts:['无要求','大专及以上','本科及以上','硕士及以上']},
+    {id:'q14',type:'radio',label:'对对方收入的期待',opts:['无要求','能经济独立即可','与我相当','高于我']},
+    {id:'q15',type:'tags-text',label:'你对TA外形的偏好',note:'可多选，也可文字描述',tags:['清秀干净','帅气英气','温柔柔和','性感有轮廓','可爱软萌','成熟稳重','运动健康','文艺气质','不在意外形'],ph:'或者用文字描述……'},
+  ]},
+  {id:'s3',num:'STEP 03',title:'三观与生活',sub:'你真实的生活方式和价值取向',questions:[
+    {id:'q16',type:'tags',label:'你的生活重心（最多3项）',limit:3,tags:['工作事业','朋友社交','个人成长','身体健康','兴趣爱好','家庭父母','旅行探索']},
+    {id:'q17',type:'radio',label:'感情在你生活中的位置',opts:['核心：伴侣是最重要的人','重要：和其他事并重','配角：感情是加分项']},
+    {id:'q18',type:'tags',label:'平时爱做的事（最多5项）',limit:5,tags:['健身运动','音乐乐器','看书写作','看剧电影','游戏','旅行露营','美食烹饪','艺术设计','摄影','宠物','冥想瑜伽','社交聚会']},
+    {id:'q19',type:'radio',label:'理想的周末',opts:['活跃型：出去探索约朋友','居家型：在家安静充电','混合型：一半出门一半独处','随机：视状态而定']},
+    {id:'q20',type:'radio',label:'关于金钱',opts:['完全AA，各付各的','谁请谁付，不计较','建立共同账户','视关系深度而变']},
+    {id:'q21',type:'radio',label:'出柜状态',opts:['已向大部分人出柜','只有少数亲密朋友知道','几乎没人知道，低调']},
+    {id:'q22',type:'radio',label:'关于孩子',opts:['明确想要','明确不要','还没想好','视伴侣决定']},
+    {id:'q23',type:'textarea',label:'你理想中的人生是什么样的？',ph:'随意写，没有标准答案……'},
+    {id:'q24',type:'textarea',label:'未来五年，你最想实现的事',ph:'可以是事业、生活、关系……'},
+    {id:'q25',type:'radio',label:'两个人在一起，最核心的是',opts:['彼此成长，互相推动','稳定安全，有人陪伴','保有自我，不互相绑架','深度理解，不用解释就懂','人生战友和合伙人']},
+  ]},
+  {id:'s4',num:'STEP 04',title:'情感模式',sub:'了解你在关系里真实的样子，没有对错',questions:[
+    {id:'q26',type:'radio',label:'喜欢一个人时，你会',opts:['直接说出来，表明心意','多接触，等感情自然发展','等对方先表态再说','用行动照顾，不说但会做']},
+    {id:'q27',type:'radio',label:'对方主动表达喜欢你时，你通常',opts:['自然接住，心里暖，直接回应','感动，但不太知道怎么接','有点不安，不确定她的意图','感觉有些压力，需要点空间']},
+    {id:'q28',type:'radio',label:'对方为你做了贴心的小事',opts:['直接说谢谢，自然感受到被照顾','有点不好意思，总想着回报','心里会想"她为什么对我这么好"','自然接受，之后找机会回应']},
+    {id:'q29',type:'radio',label:'产生不愉快时，你通常会',opts:['当下直接说，说完就过了','先离开冷静，平复了再谈','很难忍，需要立刻说清楚','忍下去，觉得吵也没用']},
+    {id:'q30',type:'radio',label:'冲突之后，你需要多久恢复',opts:['很快，说开了就没事','需要一两天消化','需要对方来找我才能好','视情况，原因不同差别很大']},
+    {id:'q31',type:'radio',label:'在关系里，你最害怕的是',opts:['被对方抛弃或离开','失去自我，被关系消耗','两者都有，都会害怕','整体有安全感，都还好']},
+    {id:'q32',type:'radio',label:'在关系里，你最需要的是',opts:['稳定的陪伴和安全感','被理解和看见','共同成长的空间','激情与新鲜感','彼此独立又亲密']},
+    {id:'q33',type:'radio',label:'发了消息，对方两小时没回，你会',opts:['觉得她可能在忙，等着','再发一条确认她看到了','开始担心是不是出问题了','不太在意，各自有节奏']},
+    {id:'q34b',type:'radio',label:'感到不被重视时，你通常会',opts:['直接告诉对方我的感受','开始更主动，努力找回她的注意','冷处理，等她自己发现','默默承受，不想给对方压力']},
+    {id:'q35b',type:'radio',label:'关系开始变亲密时，你内心',opts:['感到温暖和安心，这正是我想要的','很开心，但担心失去她','需要不断确认她的感情是真实的','有点不自在，想保留一些距离','又想靠近又想逃，说不清楚']},
+    {id:'q36a',type:'textarea',label:'你在关系里最大的优点是',ph:'诚实地写……'},
+    {id:'q36b',type:'textarea',label:'你在关系里最需要成长的地方',ph:'坦诚一点，没关系……'},
+  ]},
+  {id:'s5',num:'STEP 05',title:'当前状态',sub:'了解你现在真实的状态，匹配同频的人',questions:[
+    {id:'q37',type:'radio',label:'目前整体的能量状态',opts:['充沛：状态好，准备好了','平稳：可以开始，不急','有些疲惫：需要能给安全感的人','恢复中：还需要时间，先了解看看']},
+    {id:'q38',type:'radio',label:'上一段关系结束多久了',opts:['从未谈过恋爱','3个月以内','3–6个月','6个月–1年','1年以上']},
+    {id:'q39',type:'radio',label:'现在寻找的是',opts:['认真的长期关系','先慢慢认识，看自然发展','有陪伴感，不强求结果','开放关系']},
+    {id:'q40',type:'radio',label:'你希望这段关系的节奏',opts:['慢热型：慢慢建立信任','自然型：顺其自然','明确型：确认了就直接在一起']},
+    {id:'q41',type:'radio',label:'现在最需要从关系里得到的',opts:['稳定和安全感','日常的陪伴感','激励和共同成长','被深度理解和接纳','新鲜感和激情']},
+    {id:'q42',type:'text',label:'用三个词描述你理想的关系状态',ph:'例如：自由 / 踏实 / 有趣'},
+  ]},
+];
+
+function startQuiz(){
+  cardIdx=0;
+  formData={};
+  renderCards();
+  showScreen('sc-quiz');
+}
+
+function renderCards(){
+  var area=document.getElementById('cards-area');
+  area.innerHTML='';
+  STEPS.forEach(function(step,si){
+    var card=document.createElement('div');
+    card.className='q-card '+(si===0?'active':si<0?'prev':'next');
+    card.id='card-'+si;
+    var html='<div class="step-tag">'+step.num+'</div>';
+    html+='<div class="section-title">'+step.title+'</div>';
+    html+='<div class="section-sub">'+step.sub+'</div>';
+    step.questions.forEach(function(q){
+      html+='<div style="margin-bottom:18px">';
+      html+='<div class="q-label">'+q.label+'</div>';
+      if(q.note) html+='<div class="q-note">'+q.note+'</div>';
+      if(q.type==='text'||q.type==='number'){
+        html+='<input type="'+(q.type==='number'?'number':'text')+'" id="'+q.id+'" placeholder="'+(q.ph||'')+'">';
+      } else if(q.type==='textarea'){
+        html+='<textarea id="'+q.id+'" placeholder="'+(q.ph||'')+'"></textarea>';
+      } else if(q.type==='range'){
+        html+='<div class="input-row"><input type="number" id="'+q.id+'min" placeholder="'+(q.ph1||'最小')+'"><input type="number" id="'+q.id+'max" placeholder="'+(q.ph2||'最大')+'"></div>';
+      } else if(q.type==='radio'){
+        html+='<div class="opts">';
+        q.opts.forEach(function(o){
+          var val=o.split('：')[0].split('（')[0].trim();
+          if(q.opts.indexOf(o)===0&&q.id==='q4') val=o;
+          if(['T','P','H（不偏向）','其他','不限'].indexOf(o)>-1) val=o;
+          // simpler: use full text as value
+          html+='<div class="opt" data-qid="'+q.id+'" data-val="'+o+'" onclick="pickOpt(this)"><div class="opt-dot"></div><span>'+o+'</span></div>';
+        });
+        html+='</div>';
+      } else if(q.type==='tags'||q.type==='tags-text'){
+        html+='<div class="tags" id="tags-'+q.id+'">';
+        (q.tags||[]).forEach(function(t){
+          html+='<div class="tag" data-qid="'+q.id+'" data-lim="'+(q.limit||99)+'" data-val="'+t+'" onclick="pickTag(this)">'+t+'</div>';
+        });
+        html+='</div>';
+        if(q.type==='tags-text') html+='<textarea id="'+q.id+'-text" placeholder="'+(q.ph||'')+'" style="margin-top:10px"></textarea>';
+      }
+      html+='</div>';
+    });
+    card.innerHTML=html;
+    area.appendChild(card);
+  });
+  updateProgress();
+}
+
+function pickOpt(el){
+  var qid=el.dataset.qid;
+  document.querySelectorAll('.opt[data-qid="'+qid+'"]').forEach(function(o){ o.classList.remove('sel') });
+  el.classList.add('sel');
+}
+function pickTag(el){
+  var qid=el.dataset.qid, lim=parseInt(el.dataset.lim||99);
+  if(el.classList.contains('sel')){ el.classList.remove('sel'); return; }
+  var sel=document.querySelectorAll('.tag[data-qid="'+qid+'"].sel').length;
+  if(sel>=lim){ alert('最多选'+lim+'项'); return; }
+  el.classList.add('sel');
+}
+
+function collectCard(idx){
+  var step=STEPS[idx];
+  step.questions.forEach(function(q){
+    if(q.type==='text'||q.type==='number'){
+      var el=document.getElementById(q.id); if(el) formData[q.id]=el.value.trim();
+    } else if(q.type==='textarea'){
+      var el=document.getElementById(q.id); if(el) formData[q.id]=el.value.trim();
+    } else if(q.type==='range'){
+      var mn=document.getElementById(q.id+'min'), mx=document.getElementById(q.id+'max');
+      if(mn) formData[q.id+'min']=mn.value;
+      if(mx) formData[q.id+'max']=mx.value;
+    } else if(q.type==='radio'){
+      var sel=document.querySelector('.opt[data-qid="'+q.id+'"].sel');
+      formData[q.id]=sel?sel.dataset.val:'';
+    } else if(q.type==='tags'||q.type==='tags-text'){
+      var vals=[];
+      document.querySelectorAll('.tag[data-qid="'+q.id+'"].sel').forEach(function(t){ vals.push(t.dataset.val) });
+      formData[q.id]=vals;
+      if(q.type==='tags-text'){
+        var tx=document.getElementById(q.id+'-text'); if(tx) formData[q.id+'-text']=tx.value.trim();
+      }
+    }
+  });
+}
+
+function nextCard(){
+  collectCard(cardIdx);
+  if(cardIdx>=STEPS.length-1){ submitQuiz(); return; }
+  var cur=document.getElementById('card-'+cardIdx);
+  cur.classList.remove('active'); cur.classList.add('prev');
+  cardIdx++;
+  var next=document.getElementById('card-'+cardIdx);
+  next.classList.remove('next'); next.classList.add('active');
+  document.querySelector('.cards-area').scrollTop=0;
+  updateProgress();
+  restoreCard(cardIdx);
+}
+function prevCard(){
+  if(cardIdx===0){ showLanding(); return; }
+  collectCard(cardIdx);
+  var cur=document.getElementById('card-'+cardIdx);
+  cur.classList.remove('active'); cur.classList.add('next');
+  cardIdx--;
+  var prev=document.getElementById('card-'+cardIdx);
+  prev.classList.remove('prev'); prev.classList.add('active');
+  document.querySelector('.cards-area').scrollTop=0;
+  updateProgress();
+  restoreCard(cardIdx);
+}
+function restoreCard(idx){
+  // restore formData back into DOM
+  var step=STEPS[idx];
+  step.questions.forEach(function(q){
+    if(q.type==='text'||q.type==='number'){
+      var el=document.getElementById(q.id); if(el&&formData[q.id]) el.value=formData[q.id];
+    } else if(q.type==='textarea'){
+      var el=document.getElementById(q.id); if(el&&formData[q.id]) el.value=formData[q.id];
+    } else if(q.type==='range'){
+      var mn=document.getElementById(q.id+'min'), mx=document.getElementById(q.id+'max');
+      if(mn&&formData[q.id+'min']) mn.value=formData[q.id+'min'];
+      if(mx&&formData[q.id+'max']) mx.value=formData[q.id+'max'];
+    } else if(q.type==='radio'){
+      if(formData[q.id]){
+        document.querySelectorAll('.opt[data-qid="'+q.id+'"]').forEach(function(o){
+          if(o.dataset.val===formData[q.id]) o.classList.add('sel'); else o.classList.remove('sel');
+        });
+      }
+    } else if(q.type==='tags'||q.type==='tags-text'){
+      if(formData[q.id]){
+        document.querySelectorAll('.tag[data-qid="'+q.id+'"]').forEach(function(t){
+          if(formData[q.id].indexOf(t.dataset.val)>-1) t.classList.add('sel'); else t.classList.remove('sel');
+        });
+      }
+      if(q.type==='tags-text'){
+        var tx=document.getElementById(q.id+'-text'); if(tx&&formData[q.id+'-text']) tx.value=formData[q.id+'-text'];
+      }
+    }
+  });
+}
+function updateProgress(){
+  var pct=Math.round((cardIdx+1)/STEPS.length*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-label').textContent='第 '+(cardIdx+1)+' 步 / 共 '+STEPS.length+' 步';
+  document.getElementById('btn-next').textContent=cardIdx>=STEPS.length-1?'提交并查看报告 ✨':'继续 →';
+}
+function submitQuiz(){
+  collectCard(cardIdx);
+  if(!formData.q1){ alert('请填写昵称'); return; }
+  var u=Object.assign({id:Date.now().toString(),submittedAt:new Date().toISOString()},formData);
+  var db=getDB(); db.push(u); saveDB(db);
+  lastUser=u;
+  renderReport(u);
+  showScreen('sc-report');
+}
+
+// ===== ATTACHMENT =====
+function getType(u){
+  var anx=0,avo=0,fear=0;
+  if(u.q27&&u.q27.indexOf('不安')>-1) anx+=1.5;
+  if(u.q27&&u.q27.indexOf('不太知道怎么接')>-1) anx+=0.5;
+  if(u.q27&&u.q27.indexOf('压力')>-1) avo+=1.5;
+  if(u.q29&&u.q29.indexOf('立刻说清')>-1) anx+=1.5;
+  if(u.q29&&u.q29.indexOf('冷静')>-1) avo+=1;
+  if(u.q29&&u.q29.indexOf('忍下去')>-1) avo+=1;
+  if(u.q31&&u.q31.indexOf('被对方抛弃')>-1) anx+=2;
+  if(u.q31&&u.q31.indexOf('失去自我')>-1) avo+=2;
+  if(u.q31&&u.q31.indexOf('两者都有')>-1) fear+=2;
+  if(u.q33&&u.q33.indexOf('开始担心')>-1) anx+=1.5;
+  if(u.q33&&u.q33.indexOf('再发一条')>-1) anx+=1;
+  if(u.q33&&u.q33.indexOf('不太在意')>-1) avo+=1;
+  if(u.q34b&&u.q34b.indexOf('更主动')>-1) anx+=1.5;
+  if(u.q34b&&u.q34b.indexOf('冷处理')>-1) avo+=1;
+  if(u.q34b&&u.q34b.indexOf('默默承受')>-1) avo+=0.5;
+  if(u.q35b&&u.q35b.indexOf('担心失去')>-1) anx+=1.5;
+  if(u.q35b&&u.q35b.indexOf('不断确认')>-1) anx+=2;
+  if(u.q35b&&u.q35b.indexOf('不自在')>-1) avo+=2;
+  if(u.q35b&&u.q35b.indexOf('又想靠近又想逃')>-1){ fear+=2; anx+=0.5; avo+=0.5; }
+  if(fear>=3) return '恐惧型';
+  if(anx>=5) return '焦虑型';
+  if(avo>=4) return '回避型';
+  if(anx>=3&&anx>avo) return '焦虑倾向';
+  if(avo>=2.5&&avo>anx) return '回避倾向';
+  return '安全型';
+}
+
+// ===== ANIMAL =====
+function getAnimal(u){
+  var t=getType(u), h=u.q18||[], life=u.q16||[], work=u.q7||'';
+  var m={'安全型':'🦁','焦虑倾向':'🐬','焦虑型':'🦋','回避倾向':'🦊','回避型':'🐺','恐惧型':'🦌'};
+  if(h.indexOf('看书写作')>-1&&t==='安全型') return '🦉';
+  if(h.indexOf('冥想瑜伽')>-1) return '🕊️';
+  if(h.indexOf('旅行露营')>-1&&(t==='安全型'||t==='回避倾向')) return '🐘';
+  if(work==='创业中'&&t==='安全型') return '🦁';
+  return m[t]||'🐾';
+}
+function getAnimalDesc(u){
+  var icon=getAnimal(u);
+  var m={'🦁':'狮子 — 外表有力量感，实则温柔。给对方空间的同时自己稳稳在场，在关系里有掌控感但不控制。',
+    '🦋':'蝴蝶 — 敏感、情感浓烈、渴望深度连接。每段关系对你来说都是一次蜕变，你在爱里比任何人都认真。',
+    '🦊':'狐狸 — 聪明、独立、不轻易示弱。你用观察代替开口，用行动代替表白，需要一个有耐心等你的人。',
+    '🐺':'狼 — 高度自主，不依赖群体。一旦信任建立，忠诚而深情；但在那之前，你需要足够的领地感。',
+    '🐬':'海豚 — 共情力强，感情细腻，渴望被理解。你对关系的敏感是天赋，只是有时需要给自己和对方多一点缓冲空间。',
+    '🦌':'鹿 — 内心复杂，既想靠近又容易受惊。你比任何人都需要一个稳定、温柔、不会突然消失的人。',
+    '🦉':'猫头鹰 — 有洞察力，不随意暴露内心。表面冷静，内里丰富。你需要一个能看穿你却不说破的人。',
+    '🐘':'大象 — 沉稳、记忆力强、对关系极为认真。你记得每个细节，忠诚感极强，一旦认定就全力以赴。',
+    '🕊️':'白鸽 — 渴望平和，回避激烈冲突。你在关系里温柔体贴，但容易把自己的需求压到最后。',
+    '🐾':'金毛 — 忠诚、热情、天然给人安全感。在爱里不藏着掖着，有什么说什么，对方在你身边会很自在。'};
+  return m[icon]||m['🐾'];
+}
+
+// ===== DANGER =====
+function getDanger(u){
+  var t=getType(u);
+  var d={
+    '安全型':{icon:'🦂',name:'极度回避型 / 情感荒漠型',
+      why:'你给得出安全感，但极度回避型接不住。她对你的付出会冷处理，你的稳定在她眼里反而是"没激情"，长期会消耗你的信心。',
+      signals:['长时间不回消息但觉得没有问题','情绪低谷时自动消失，从不寻求安慰','总是等你先联系，从不主动','聊到感情就转移话题或轻描淡写']},
+    '焦虑倾向':{icon:'🐍',name:'时热时冷型 / 情感游离型',
+      why:'你对关系的温度敏感，而她忽冷忽热会直接激活你最不稳定的那一面。你会开始追问、怀疑、不断解读——这种状态对你非常消耗。',
+      signals:['有时热情到底，有时突然消失几天','同样的事有时在意有时完全不在意','喜欢制造一点不确定感，觉得这样"保鲜"','从不主动确认关系状态']},
+    '焦虑型':{icon:'🦂',name:'回避型 / 情感不表达型',
+      why:'这是你最危险的组合。你越追，她越退。你读到的每一次距离都会变成你内心的噩兆，而她的沉默会被你解读成拒绝。这个结构会让你非常痛苦。',
+      signals:['冲突时选择沉默或离开，从不解释','很少主动说"我想你""我在意你"','不喜欢被问"你最近怎么了"','对关系的未来态度永远模糊']},
+    '回避倾向':{icon:'🐙',name:'高控制型 / 关系黏着型',
+      why:'你需要空间，她需要黏着。你的独处时间会被解读成不爱她，你的边界会成为冲突导火索。你会开始感到窒息，然后本能地退得更远。',
+      signals:['需要你随时回消息，否则就担心','不喜欢你有太多独立的社交','把所有事都当成"我们的问题"要当下解决','分开超过一天就觉得有距离感']},
+    '回避型':{icon:'🌪️',name:'情感依赖型 / 需要被拯救型',
+      why:'你的独立性会被解读成冷漠，她对情感的高需求会让你本能收缩。你会越退越远，她会越来越委屈，最终谁都不快乐。',
+      signals:['经常说"你不理解我"或"你不在乎我"','需要频繁的情感确认才能安心','很难独处，总需要有人陪','把关系里的问题都归因于"你不够爱我"']},
+    '恐惧型':{icon:'🔥',name:'情感戏剧型 / 高波动型',
+      why:'你自己的内心已经很复杂，再加上一个情绪大起大落的人，两个人的混乱会彼此放大。你很难在这种关系里找到稳定的落脚点。',
+      signals:['上一秒还好，下一秒突然崩溃','认为关系越激烈越真实，平淡就是没感情','用争吵或冷漠来"测试"对方是否在乎','不能接受任何稳定的日常感']},
+  };
+  return d[t]||d['安全型'];
+}
+
+// ===== PORTRAIT =====
+function getPortrait(u){
+  var t=getType(u), h=u.q18||[], life=u.q16||[], work=u.q7||'';
+  var rarity={'安全型':'在拉拉群体中约占20-25%，是最稀缺也最受欢迎的依恋基底，很多人一辈子只遇到一两个。',
+    '焦虑倾向':'在拉拉群体中约占25-30%，情感丰富、在意对方，是很常见的类型。',
+    '焦虑型':'在拉拉群体中约占20-25%，情感强烈，渴望深度连接，对关系非常投入。',
+    '回避倾向':'在拉拉群体中约占20%，独立性强，进入关系的门槛较高。',
+    '回避型':'在拉拉群体中约占15%，高度独立，在亲密关系中需要大量个人空间。',
+    '恐惧型':'在拉拉群体中约占10-12%，内心渴望亲密又害怕受伤，是最复杂也最需要耐心的类型。'};
+  var desc=[];
+  if(work==='创业中'||work==='自由职业') desc.push('有自己在跑的项目，时间自由但内心始终在线');
+  if(life.indexOf('个人成长')>-1) desc.push('喜欢学习和成长，聊天时总有新东西');
+  if(life.indexOf('工作事业')>-1) desc.push('有事业心，不会轻易为感情放弃目标');
+  if(h.indexOf('看书写作')>-1) desc.push('内心世界丰富，表达能力强，聊天有深度');
+  if(h.indexOf('旅行露营')>-1) desc.push('喜欢新体验，不愿被生活框住');
+  if(h.indexOf('艺术设计')>-1) desc.push('有审美，细节敏感，对美有自己的判断');
+  if(!desc.length) desc.push('低调但有内容，需要时间才能了解真实的她');
+  var places=[];
+  if(h.indexOf('健身运动')>-1) places.push('跑团/健身房');
+  if(h.indexOf('看书写作')>-1) places.push('读书会/文学社群');
+  if(h.indexOf('旅行露营')>-1) places.push('户外活动群');
+  if(h.indexOf('艺术设计')>-1) places.push('设计展/创意课');
+  if(h.indexOf('冥想瑜伽')>-1) places.push('瑜伽课/身心工作坊');
+  if(h.indexOf('社交聚会')>-1) places.push('有主题的小圈子');
+  if(work==='创业中') places.push('创业社群');
+  if(!places.length) places=['拉拉主题活动','小圈子口碑介绍'];
+  return {pct:rarity[t]||'', desc:desc.slice(0,3).join('；'), places:places.slice(0,4), type:t};
+}
+
+// ===== TYPE DATA =====
+function getTypeData(t){
+  var m={
+    '安全型':{desc:'你在关系里有天然的稳定感。你能直接表达感受，也能接住对方的情绪而不被淹没。遇到冲突，你不会逃跑也不会失控。',
+      strength:'你能给关系提供稳定的容器。对方在你身边不需要小心翼翼，可以真实地做自己。你的存在本身就是安全感。',
+      blind:'你有时可能低估对方对安全感的需求。焦虑型在你身边可能需要更多语言确认——不用猜，直接说出来。',
+      suitable:'同样的安全型，或者有成长意愿的焦虑型/回避型。你的稳定能成为她修复依恋模式的土壤。'},
+    '焦虑倾向':{desc:'你对关系敏感，情感丰富，在意对方的回应。多数情况下能处理好，但在压力或关系不稳定时，焦虑倾向会被激活。',
+      strength:'你在感情里投入真诚，对方能感受到你的温度和在意。你对关系细节敏感，很少会忽视对方的情绪变化。',
+      blind:'当对方需要独处空间时，你可能会过度解读为"她不在乎我了"。这种信号误读会消耗双方的能量。',
+      suitable:'安全型或有觉察力的焦虑倾向。避免和回避型长期在一起，那会激活你最不安全的那一面。'},
+    '焦虑型':{desc:'你渴望深度亲密，对关系非常投入，情感浓烈。但你的安全感高度依赖对方的回应，一旦对方距离稍远，预警系统就会启动。',
+      strength:'你是一个极其投入的伴侣。你在感情里全力以赴，对方能切实感受到被在意、被珍视。你比大多数人更懂得用心经营关系。',
+      blind:'对被抛弃的恐惧让你的预警系统过于灵敏。你可能把对方正常的疏远解读为"她不爱我了"，进而追问或试探，形成追逃循环。',
+      suitable:'安全型——她的稳定能帮你校准那个过于灵敏的预警系统。强烈避免和回避型在一起，那是最高风险的组合。'},
+    '回避倾向':{desc:'你高度独立，习惯靠自己处理事情。亲密关系有时会让你感觉有些压迫，你需要个人空间才能感到舒适。',
+      strength:'你不依赖关系来定义自己，有清晰的自我边界。你不会把情绪随意丢给对方，也不会因为感情影响自己的判断力。',
+      blind:'你在情感上的"消失"常常让对方误以为你不在乎。你的沉默和距离，对焦虑型来说是一种折磨。学会说"我没事，我只是需要独处"会让一切不同。',
+      suitable:'安全型——她能给你空间而不会把它解读为拒绝。避免和焦虑型建立认真关系，那会让你们都很痛苦。'},
+    '回避型':{desc:'你极度独立，亲密关系对你来说有真实的压迫感。你不是不想爱，你只是用自己的方式在爱，而且这种方式很难被对方理解。',
+      strength:'你拥有清晰的自我，不会因为感情失去方向。你在关系里理性、不戏剧化，能给对方稳定的边界感。',
+      blind:'你对亲密的本能回避，对焦虑型来说是无声的拒绝。你需要主动练习语言表达——因为她们需要听到你说出来。',
+      suitable:'安全型，她能给你足够的空间而不产生怨恨。强烈避免和焦虑型在一起，那种追逃结构会让你们两个人都很痛苦。'},
+    '恐惧型':{desc:'你同时渴望亲密又害怕亲密。你知道自己想被爱，但一旦对方真的靠近，你又会不安甚至想逃。这两种力量在你内部同时存在。',
+      strength:'你对自己内心有相当深的感知，你知道自己复杂，这本身就是一种珍贵的自我觉察能力。你在关系里从不肤浅。',
+      blind:'你的矛盾行为会让对方非常困惑——她不知道哪个才是真实的你。这种不一致性会消耗对方大量情感资源。建议先做一些个人层面的工作。',
+      suitable:'有足够耐心和安全感的安全型——她能在你推开她的时候不消失，也能在你靠近的时候接住你。'},
+  };
+  return m[t]||m['安全型'];
+}
+
+// ===== NEED / STATE =====
+function needDesc(v){
+  var m={'稳定和安全感':'你最需要一个能给你稳定感的人——她说了会做，做了会说，不会突然消失。不需要轰轰烈烈，需要踏实可靠。',
+    '日常的陪伴感':'你最需要日常的陪伴感——不是轰轰烈烈，而是睡前一个消息、难过时有人接住。',
+    '激励和共同成长':'你最需要一个有方向感的人，她在成长，你们在一起能互相推动。这种关系不容易变成舒适区的温水。',
+    '被深度理解和接纳':'你最需要一个真正懂你的人，不需要你解释就能读懂你的状态。这种人通常有很强的共情力，内心世界也比较丰富。',
+    '新鲜感和激情':'你最需要一个能持续给你新鲜感的人——有趣、有想法、不重复。但也要留意激情消退后，你们底层是否还有东西可以连接。'};
+  // partial match
+  if(!v) return '你有清晰的情感需求，找到真正符合的人比凑合更重要。';
+  for(var k in m){ if(v.indexOf(k.split('和')[0])>-1||v.indexOf(k)>-1) return m[k]; }
+  return '你有清晰的情感需求，找到真正符合的人比凑合更重要。';
+}
+function stateDesc(v){
+  if(!v) return '你的状态整体可控，可以慢慢开始。';
+  if(v.indexOf('充沛')>-1) return '你现在状态很好，是进入新关系的好时机。能量充沛的人在感情里更有主动性，也更不容易被情绪劫持。';
+  if(v.indexOf('平稳')>-1) return '你的状态稳定，没有特别高涨也没有低落。这是一种很适合慢慢建立关系的状态，不会因为情绪波动做出冲动决定。';
+  if(v.indexOf('疲惫')>-1) return '你现在有些消耗。注意"退行性依附"——在资源耗尽时，大脑容易把熟悉的稳定感误认为解决方案，而不是真正适合自己的人。先把自己照顾好，再做决定。';
+  if(v.indexOf('恢复')>-1) return '你还在恢复中。可以先了解看看，但不需要着急下决定。你现在感受到的某些情感需求，有一部分是恢复期的产物，等稳定了会更清晰。';
+  return '你的状态整体可控，可以慢慢开始。';
+}
+
+// ===== RENDER SELF REPORT =====
+function renderReport(u){
+  var type=getType(u), td=getTypeData(type);
+  var animal=getAnimal(u), animalDesc=getAnimalDesc(u);
+  var danger=getDanger(u), portrait=getPortrait(u);
+  var ageRange=(u.q10min&&u.q10max)?u.q10min+'–'+u.q10max+'岁':'无特定范围';
+  var targetDesc=u.q12&&u.q12!=='不限'?'你期待一个<strong>'+u.q12+'</strong>，':'你对属性没有限制，';
+  var hobbies=u.q18||[];
+
+  var html='';
+
+  // HERO
+  html+=`<div class="hero-card">
+    <div class="hero-animal">${animal}</div>
+    <div class="hero-name">${u.q1||'你'} 的专属解读</div>
+    <div class="hero-sub">${u.q2||''}岁 · ${u.q3||''} · ${(u.q4||'').split('（')[0]}</div>
+    <div class="hero-animal-desc">${animalDesc}</div>
+  </div>`;
+
+  // 1. 我要找的人
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">🔍</span>你要找的人，在人群里是这样的</div>
+    <div class="r-body" style="margin-bottom:12px;padding:10px 13px;background:rgba(123,108,246,0.06);border-radius:11px">
+      ${targetDesc}年龄 <strong>${ageRange}</strong>。
+      ${u.q15&&u.q15.length?'外形偏好：<strong>'+u.q15.join('、')+'</strong>。':''}
+      ${u['q15-text']?'她的感觉是：「'+u['q15-text']+'」':''}
+    </div>
+    <div class="p-block"><div class="p-lbl">在拉拉群体中的占比</div>
+      <div class="p-text">符合你所有条件的人<strong>大约占拉拉群体的8-15%</strong>。她不是随处可见的，但也不是不存在——只是需要主动去找对地方。</div></div>
+    <div class="p-block"><div class="p-lbl">她最可能是哪种人</div>
+      <div class="p-text">她很可能是一个<strong>有自己生活重心、不完全以感情为中心</strong>的人。她在关系里<strong>${u.q25&&u.q25.indexOf('保有自我')>-1?'边界感清晰，不会轻易迷失自我':u.q25&&u.q25.indexOf('成长')>-1?'有成长导向，对自己和对方都有期待':'有自己的方向感'}</strong>。她不是你的全部，但她在的时候你能感受到被托住。</div></div>
+    <div class="p-block"><div class="p-lbl">在哪里最容易遇到她</div>
+      <div class="places">
+        ${hobbies.indexOf('健身运动')>-1?'<span class="place">📍 跑团/健身房</span>':''}
+        ${hobbies.indexOf('看书写作')>-1?'<span class="place">📍 读书会</span>':''}
+        ${hobbies.indexOf('旅行露营')>-1?'<span class="place">📍 户外活动群</span>':''}
+        ${hobbies.indexOf('艺术设计')>-1?'<span class="place">📍 设计展览</span>':''}
+        ${hobbies.indexOf('冥想瑜伽')>-1?'<span class="place">📍 瑜伽课</span>':''}
+        <span class="place">📍 拉拉主题活动</span>
+        <span class="place">📍 小圈子口碑介绍</span>
+        ${u.q7==='创业中'?'<span class="place">📍 创业社群</span>':''}
+      </div>
+    </div>
+  </div>`;
+
+  // 2. 依恋类型
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">🧠</span>你的依恋类型</div>
+    <div style="margin-bottom:10px"><span class="type-badge">${type}</span></div>
+    <div class="r-body" style="margin-bottom:12px;padding:10px 13px;background:rgba(123,108,246,0.05);border-radius:11px">${td.desc}</div>
+    <div class="items">
+      <div class="item item-p"><strong>你的核心优势</strong><br>${td.strength}</div>
+      <div class="item item-y"><strong>你的关系盲点</strong><br>${td.blind}</div>
+      <div class="item item-b"><strong>最适合你的人</strong><br>${td.suitable}</div>
+    </div>
+  </div>`;
+
+  // 3. 避雷
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">⚠️</span>你要避开的人</div>
+    <div class="danger-box">
+      <div style="font-size:26px;margin-bottom:6px">${danger.icon}</div>
+      <div class="danger-name">${danger.name}</div>
+      <div class="danger-why">${danger.why}</div>
+      <div class="signal-label">🚨 遇到这些信号，请认真考虑：</div>
+      <div class="items">${danger.signals.map(s=>'<div class="item item-r">'+s+'</div>').join('')}</div>
+    </div>
+  </div>`;
+
+  // 4. 状态
+  var stateWarn=u.q38&&u.q38.indexOf('3个月')>-1?'<div style="margin-top:10px;padding:10px 13px;background:rgba(244,168,53,0.08);border:1.5px solid rgba(244,168,53,0.2);border-radius:11px;font-size:13px;color:#B8780A"><strong>注意：</strong>你的上段关系结束不足3个月。这个阶段大脑容易用新关系填补空缺。建议先观察自己的状态，不急于确认关系。</div>':'';
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">⚡</span>你现在的状态</div>
+    <div class="r-body">${stateDesc(u.q37)}</div>
+    ${stateWarn}
+  </div>`;
+
+  // 5. 你最需要的
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">💡</span>你在关系里最需要的</div>
+    <div class="r-body">${needDesc(u.q41)}</div>
+  </div>`;
+
+  // 6. 在关系里的样子
+  var expDesc=function(v){if(!v)return'你有自己独特的表达方式。';if(v.indexOf('直接说出来')>-1)return'<strong>直接表达型</strong> — 你会直接说出来，不绕弯子。对方不需要猜你的意思，这是情感上很成熟的行为。';if(v.indexOf('多接触')>-1)return'<strong>渐进式表达型</strong> — 你会多创造机会，等感情自然发展。温和有效，但有时对方可能读不到信号，需要适时说清楚。';if(v.indexOf('等对方先')>-1)return'<strong>确认后表达型</strong> — 你需要先确认安全，再打开自己。你在关系里有一定的自我保护机制。';return'<strong>行动表达型</strong> — 你用行动照顾对方而不是语言。这很真诚，但语言也同样重要——让对方听到你说出来。';};
+  var recDesc=function(v){if(!v)return'你有自己的接受方式。';if(v.indexOf('自然接住')>-1)return'<strong>接受能力健康</strong> — 你能自然地接住对方的爱，这是非常健康的表现。对方在你身边会感到被回应。';if(v.indexOf('不太知道怎么接')>-1)return'<strong>接受能力待开发</strong> — 你能感受到对方的爱，但回应上有些卡顿。这可能让对方感觉付出没有被接住。';if(v.indexOf('不安')>-1)return'<strong>接受时有防御</strong> — 对方表达爱时你会有点不安。这通常来自对亲密的不确定感，需要时间和安全感来慢慢打开。';return'<strong>接受时感到压迫</strong> — 亲密让你感到压力，这是回避型的典型反应。你需要一个给你足够空间的人。';};
+  var conflDesc=function(v){if(!v)return'你有自己的冲突处理方式。';if(v.indexOf('当下直接说')>-1)return'<strong>即时处理型</strong> — 当下直接说出来，这是最健康的冲突处理方式之一。';if(v.indexOf('先离开冷静')>-1)return'<strong>冷静后处理型</strong> — 先冷静再谈，理性有效。但记得告诉对方"我需要一点时间，我会回来"，否则她会以为你在消失。';if(v.indexOf('立刻说清楚')>-1)return'<strong>立刻解决型</strong> — 你需要立刻把事情说清楚，等不了。在对方需要冷静时会造成对撞，需要双方都有觉察。';return'<strong>压抑型</strong> — 你会忍下去。短期内平和，但情绪不会消失，只会积累，需要注意。';};
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">🪞</span>在关系里，你是这样的人</div>
+    <div class="items">
+      <div class="item item-p"><strong>表达爱的方式</strong><br>${expDesc(u.q26)}</div>
+      <div class="item item-b"><strong>接受爱的能力</strong><br>${recDesc(u.q27)}</div>
+      <div class="item item-y"><strong>冲突处理方式</strong><br>${conflDesc(u.q29)}</div>
+      ${u.q36a?'<div class="item item-b"><strong>你的优点（自己说的）</strong><br>'+u.q36a+'</div>':''}
+      ${u.q36b?'<div class="item item-y"><strong>你想成长的地方</strong><br>'+u.q36b+'</div>':''}
+    </div>
+  </div>`;
+
+  // 7. 像你这样的人
+  html+=`<div class="r-card">
+    <div class="r-title"><span class="r-icon">🌏</span>像你这样的人，在人群里</div>
+    <div class="p-block"><div class="p-lbl">依恋类型占比</div>
+      <div class="p-text"><strong>${portrait.type}</strong> — ${portrait.pct}</div></div>
+    <div class="p-block"><div class="p-lbl">你是哪种人</div>
+      <div class="p-text">${portrait.desc}。</div></div>
+    <div class="p-block"><div class="p-lbl">你的同类在哪里出没</div>
+      <div class="places">${portrait.places.map(p=>'<span class="place">📍 '+p+'</span>').join('')}</div></div>
+  </div>`;
+
+  html+=`<div style="text-align:center;padding:20px;font-size:12px;color:var(--pale)">🐾 Taim. 会在3个工作日内与你联系<br>${new Date().toLocaleString()}</div>`;
+
+  document.getElementById('report-content').innerHTML=html;
+}
+
+// ===== ADMIN =====
+function loadAdmin(){
+  var users=getDB(), list=document.getElementById('admin-list');
+  if(!users.length){list.innerHTML='<div style="text-align:center;color:var(--pale);padding:40px">还没有用户档案</div>';return;}
+  var cols=['#7B6CF6','#5B9BD5','#FF8FAB','#34C78A','#F4A835','#9B6CF6'];
+  list.innerHTML=users.map(function(u,i){
+    var c=cols[i%cols.length];
+    var selA_=selA&&selA.id===u.id, selB_=selB&&selB.id===u.id;
+    var cls='u-card'+(selA_?' sel-a':selB_?' sel-b':'');
+    var badge=selA_?'<span class="bdg bdg-a">A</span>':selB_?'<span class="bdg bdg-b">B</span>':'';
+    return '<div class="'+cls+'" onclick="selUser(\''+u.id+'\')">'+
+      '<div class="u-av" style="background:linear-gradient(135deg,'+c+',#3D2A8A)">'+u.q1.slice(0,2)+'</div>'+
+      '<div style="flex:1"><div class="u-name">'+u.q1+badge+'</div>'+
+      '<div class="u-meta">'+u.q2+'岁 · '+u.q3+' · '+(u.q4||'').split('（')[0]+' · '+getType(u)+'</div></div>'+
+      '<div style="font-size:11px;color:var(--pale)">'+new Date(u.submittedAt).toLocaleDateString()+'</div></div>';
+  }).join('');
+}
+function selUser(id){
+  var u=getDB().find(function(x){return x.id===id});
+  if(!u)return;
+  if(selA&&selA.id===id) selA=null;
+  else if(selB&&selB.id===id) selB=null;
+  else if(!selA) selA=u;
+  else if(!selB) selB=u;
+  else { selA=u; selB=null; }
+  updatePair(); loadAdmin();
+}
+function updatePair(){
+  var el=document.getElementById('pair-disp'), btn=document.getElementById('btn-match');
+  if(selA&&selB){
+    el.innerHTML='<span class="pair-tag pair-a">'+selA.q1+'</span><span style="font-size:16px">💕</span><span class="pair-tag pair-b">'+selB.q1+'</span>';
+    btn.disabled=false;
+  } else if(selA){
+    el.innerHTML='<span class="pair-tag pair-a">'+selA.q1+'</span><span style="color:var(--pale)"> + 再选一位</span>';
+    btn.disabled=true;
+  } else {
+    el.innerHTML='<span style="color:var(--pale)">还未选择</span>';
+    btn.disabled=true;
+  }
+}
+
+// ===== MATCH =====
+function overlap(a,b){if(!a||!b)return 0;return a.filter(function(x){return b.indexOf(x)>-1}).length}
+function attScore(ta,tb){
+  var m={'安全型+安全型':20,'安全型+焦虑倾向':17,'安全型+回避倾向':16,'安全型+焦虑型':15,'安全型+回避型':14,'安全型+恐惧型':10,
+    '焦虑倾向+回避倾向':9,'焦虑倾向+焦虑倾向':8,'回避倾向+回避倾向':9,'焦虑型+焦虑倾向':6,'回避型+回避倾向':7,
+    '焦虑型+焦虑型':5,'回避型+回避型':8,'焦虑型+回避型':2,'焦虑倾向+回避型':3,'焦虑型+回避倾向':4,
+    '焦虑型+恐惧型':4,'回避型+恐惧型':5,'恐惧型+恐惧型':3,'焦虑倾向+恐惧型':6,'回避倾向+恐惧型':6};
+  return m[ta+'+'+tb]||m[tb+'+'+ta]||8;
+}
+function energyScore(e1,e2){
+  if(!e1||!e2) return 6;
+  var充=function(e){return e.indexOf('充沛')>-1}, 平=function(e){return e.indexOf('平稳')>-1},
+      疲=function(e){return e.indexOf('疲惫')>-1}, 复=function(e){return e.indexOf('恢复')>-1};
+  if(充(e1)&&充(e2)) return 10; if(平(e1)&&平(e2)) return 10;
+  if((充(e1)&&平(e2))||(平(e1)&&充(e2))) return 9;
+  if((充(e1)&&疲(e2))||(疲(e1)&&充(e2))) return 7;
+  if(疲(e1)&&疲(e2)) return 4;
+  if(复(e1)||复(e2)) return 3;
+  return 6;
+}
+function calcMatch(a,b){
+  var ta=getType(a),tb=getType(b),d={};
+  var dem=0;
+  var sameCity=(a.q11&&a.q11.indexOf('必须同城')>-1)||(b.q11&&b.q11.indexOf('必须同城')>-1);
+  dem+=(sameCity?a.q3===b.q3:true)?8:0;
+  var attrOk=true;
+  if(a.q12&&a.q12!=='不限'&&a.q12!==b.q4) attrOk=false;
+  if(b.q12&&b.q12!=='不限'&&b.q12!==a.q4) attrOk=false;
+  dem+=attrOk?8:0;
+  var ageOk=true;
+  if(a.q10min&&a.q10max&&b.q2){var ba=parseInt(b.q2);if(ba<parseInt(a.q10min)||ba>parseInt(a.q10max)) ageOk=false;}
+  if(b.q10min&&b.q10max&&a.q2){var aa=parseInt(a.q2);if(aa<parseInt(b.q10min)||aa>parseInt(b.q10max)) ageOk=false;}
+  dem+=ageOk?4:0;
+  d.dem=dem;
+
+  var life=0;
+  life+=Math.min(overlap(a.q16,b.q16)*3,9);
+  var wi=['活跃型','混合型','居家型'];
+  var ai=wi.findIndex(function(w){return a.q19&&a.q19.indexOf(w)>-1})||0;
+  var bi=wi.findIndex(function(w){return b.q19&&b.q19.indexOf(w)>-1})||0;
+  if(a.q19===b.q19||!a.q19||!b.q19) life+=6; else if(Math.abs(ai-bi)===1) life+=3;
+  var kidsA=a.q22||'',kidsB=b.q22||'';
+  if(kidsA===kidsB||kidsA.indexOf('视伴侣')>-1||kidsB.indexOf('视伴侣')>-1) life+=8;
+  else if((kidsA.indexOf('想要')>-1&&kidsB.indexOf('不要')>-1)||(kidsA.indexOf('不要')>-1&&kidsB.indexOf('想要')>-1)) life+=0;
+  else life+=4;
+  life+=Math.min(overlap(a.q18,b.q18)*2,7);
+  d.life=life;
+
+  var att=attScore(ta,tb);
+  att+=8; // base communication
+  att+=a.q25&&b.q25&&a.q25===b.q25?7:3;
+  d.att=att;
+
+  var cur=energyScore(a.q37,b.q37);
+  var sameIntent=a.q39&&b.q39&&(a.q39===b.q39);
+  cur+=sameIntent?5:2;
+  d.cur=cur;
+
+  return {total:d.dem+d.life+d.att+d.cur, d:d, ta:ta, tb:tb};
+}
+
+function genMatch(){
+  if(!selA||!selB){alert('请先选择两位用户');return;}
+  var a=selA,b=selB, res=calcMatch(a,b);
+  var s=res.total, d=res.d, ta=res.ta, tb=res.tb;
+  var stars=s>=80?'★★★★★':s>=65?'★★★★☆':s>=50?'★★★☆☆':s>=35?'★★☆☆☆':'★☆☆☆☆';
+  var tagCls=s>=80?'rec-strong':s>=65?'rec-ok':s>=50?'rec-caution':'rec-no';
+  var tagTxt=s>=80?'强烈推荐 💕':s>=65?'可以推进 🌿':s>=50?'谨慎尝试 🌙':'暂不建议 ⚠️';
+  var portraitB=getPortrait(b);
+  var animalA=getAnimal(a), animalB=getAnimal(b);
+
+  var pros=[];
+  if(overlap(a.q16,b.q16)>=2) pros.push('生活重心高度重叠（'+overlap(a.q16,b.q16)+'项共同），日常相处不会有方向上的割裂感');
+  if(overlap(a.q18,b.q18)>=2) pros.push('共同爱好'+overlap(a.q18,b.q18)+'项，第一次约会有天然话题，不尴尬');
+  if(a.q25&&b.q25&&a.q25===b.q25) pros.push('对"关系核心是什么"的理解完全一致：都认为是「'+a.q25+'」');
+  if(ta==='安全型'||tb==='安全型') pros.push('其中一人是安全型依恋，能为关系提供稳定的情感基底');
+  while(pros.length<3) pros.push('两人都在认真寻找一段有质量的关系，出发点一致');
+
+  var risks=[];
+  if(ta==='焦虑型'&&(tb==='回避型'||tb==='回避倾向')) risks.push('⚠️ 焦虑型+回避型是高风险组合：一方越追，另一方越缩，容易陷入追逃循环');
+  else if(ta==='回避型'&&(tb==='焦虑型'||tb==='焦虑倾向')) risks.push('⚠️ 回避型+焦虑型是高风险组合：一方越追，另一方越缩，容易陷入追逃循环');
+  if((a.q11&&a.q11.indexOf('必须同城')>-1||b.q11&&b.q11.indexOf('必须同城')>-1)&&a.q3!==b.q3) risks.push('⚠️ 其中一方要求必须同城，但两人目前不在同一城市');
+  if(!risks.length) risks.push('整体风险可控，主要挑战在于建立初期的信任');
+  if(risks.length<2) risks.push('在生活节奏或关系期待上可能存在细微差异，建议早期多沟通');
+
+  var advice=s>=80?'建议这周内安排第一次见面，选一个有话题感的场景（咖啡馆+散步），不需要太正式，自然聊就好。':
+    s>=65?'建议先通过3-5次线上深聊建立初步了解，再安排见面。从两人共同的兴趣切入，避免过早聊"关系"本身。':
+    s>=50?'可以作为候选，但建议先单独约聊一次，了解彼此的生活状态和沟通方式，再决定是否推进。':
+    '目前匹配度偏低，建议暂缓。可以等双方状态更新后重新评估，或先各自聊更合适的人选。';
+
+  function chatHTML(msgs){
+    return '<div class="chat">'+msgs.map(function(m){
+      var isA=m.who==='a';
+      return '<div class="chat-row-'+(isA?'a':'b')+'">'+
+        '<div class="chat-who">'+(isA?a.q1:b.q1)+'</div>'+
+        '<div class="chat-msg chat-'+(isA?'a':'b')+'">'+m.text+'</div></div>';
+    }).join('')+'</div>';
+  }
+
+  var chatNorm=[{who:'b',text:'今天见面好开心，你比我想象中更有意思😊'},{who:'a',text:'哈哈我也是，你说的那个问题我一直在想'},{who:'b',text:'真的吗，哪个？'},{who:'a',text:'就是，两个人在一起到底是为了彼此成长还是为了不孤单'},{who:'b',text:'你想通了吗'},{who:'a',text:'没有，所以我想再见你一次继续聊🌿'}];
+  var chatConf=[{who:'a',text:'你昨天说好要回我消息的'},{who:'b',text:'我……忘了，不好意思'},{who:'a',text:'不是第一次了'},{who:'b',text:'我最近状态不太好，但我不想每次都要解释'},{who:'a',text:'我只是想知道你还在不在'},{who:'b',text:'在的，只是需要一点自己的时间'},{who:'a',text:'你说需要时间，我说需要回应，我们需要的好像不一样'}];
+
+  var dimInfo={dem:{name:'人口学匹配',max:20},life:{name:'三观生活匹配',max:30},att:{name:'情感模式匹配',max:35},cur:{name:'当前状态匹配',max:15}};
+
+  var html=`
+  <div class="hero-card" style="margin-bottom:12px">
+    <div style="font-size:28px;margin-bottom:8px">${animalA} 💕 ${animalB}</div>
+    <div class="hero-name">${a.q1} &amp; ${b.q1}</div>
+    <div class="score-wrap" style="margin-top:14px">
+      <div class="score-ring">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(123,108,246,0.12)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#mg)" stroke-width="8"
+            stroke-dasharray="${(s/100*264).toFixed(1)} 264" stroke-linecap="round"/>
+          <defs><linearGradient id="mg" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#7B6CF6"/><stop offset="100%" stop-color="#5B9BD5"/>
+          </linearGradient></defs>
+        </svg>
+        <div class="score-num">${s}</div>
+      </div>
+      <div class="stars">${stars}</div>
+      <span class="rec-tag ${tagCls}">${tagTxt}</span>
+    </div>
+  </div>
+
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">🔍</span>${b.q1} 是哪种人</div>
+    <div class="p-block"><div class="p-lbl">依恋类型</div>
+      <div class="p-text">她是 <strong>${tb}</strong>。${portraitB.pct}</div></div>
+    <div class="p-block"><div class="p-lbl">她最可能是哪种人</div>
+      <div class="p-text">${portraitB.desc}。</div></div>
+  </div>
+
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">✅</span>可行之处</div>
+    <div class="items">${pros.map(p=>'<div class="item item-p">'+p+'</div>').join('')}</div>
+  </div>
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">⚡</span>潜在风险</div>
+    <div class="items">${risks.map(r=>'<div class="item item-y">'+r+'</div>').join('')}</div>
+  </div>
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">🧭</span>建议从何处入手</div>
+    <div class="r-body">${advice}</div>
+  </div>
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">💬</span>模拟相处（第一次见面后）</div>
+    ${chatHTML(chatNorm)}
+  </div>
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">🌪</span>可能出现问题的场景</div>
+    ${chatHTML(chatConf)}
+  </div>
+  <div class="r-card">
+    <div class="r-title"><span class="r-icon">📊</span>各维度评分</div>
+    <div style="font-size:12px;color:var(--pale);margin-bottom:10px">${a.q1} = <strong style="color:var(--purple)">${ta}</strong> · ${b.q1} = <strong style="color:var(--blue)">${tb}</strong></div>
+    <div class="dim-grid">
+      ${Object.keys(dimInfo).map(function(k){
+        var di=dimInfo[k], pct=Math.round(d[k]/di.max*100);
+        return '<div class="dim-card"><div class="dim-name">'+di.name+'</div>'+
+          '<div><span class="dim-val">'+d[k]+'</span><span style="font-size:11px;color:var(--pale)"> / '+di.max+'</span></div>'+
+          '<div class="dim-bar"><div class="dim-fill" style="width:'+pct+'%"></div></div></div>';
+      }).join('')}
+    </div>
+  </div>
+  <div style="text-align:center;padding:16px;font-size:12px;color:var(--pale)">${new Date().toLocaleString()}</div>`;
+
+  document.getElementById('match-content').innerHTML=html;
+  showScreen('sc-match');
+}
+
+// ===== INIT =====
+window.addEventListener('load',function(){
+  var users=getDB();
+  if(users.length) lastUser=users[users.length-1];
+
+  if(location.hash==='#admin'){ showAdmin(); return; }
+  if(location.hash==='#me'){ showReport(); return; }
+  showScreen('sc-landing');
+
+  if(users.length){
+    var bar=document.createElement('button');
+    bar.className='float-bar';
+    bar.textContent='🐾 查看我的报告（'+users[users.length-1].q1+'）';
+    bar.onclick=function(){ showReport(); bar.remove(); };
+    document.body.appendChild(bar);
+  }
+});
+</script>
+</body>
+</html>
